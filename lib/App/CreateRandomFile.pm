@@ -18,7 +18,7 @@ sub _write_block {
     if ($cursize >= $size) {
         return;
     } elsif ($cursize + length($block) > $size) {
-        print $fh substr($block, 0, $cursize+length($block)-$size);
+        print $fh substr($block, 0, $size - $cursize);
     } else {
         print $fh $block;
     }
@@ -57,7 +57,7 @@ _
         interactive => {
             summary => 'Whether or not the program should be interactive',
             schema => 'bool',
-            default => 1,
+            default => 0,
             description => <<'_',
 
 If set to false then will not prompt interactively and usually will proceed
@@ -65,13 +65,13 @@ If set to false then will not prompt interactively and usually will proceed
 
 _
         },
-        override => {
-            summary => 'Whether to override existing file',
+        overwrite => {
+            summary => 'Whether to overwrite existing file',
             schema => 'bool',
             default => 0,
             description => <<'_',
 
-If se to true then will override existing file without warning. The default is
+If se to true then will overwrite existing file without warning. The default is
 to prompt, or bail (if not interactive).
 
 _
@@ -89,26 +89,31 @@ _
             argv => [qw/file1 1M/],
             summary => 'Create a file of size 1MB containing random bytes',
             test => 0,
+            'x.doc.show_result' => 0, # so PWP:Rinci doesn't execute our function to get result
         },
         {
             argv => [qw/file2 2M --random-bytes/],
             summary => 'Like the previous example (--random-bytes is optional)',
             test => 0,
+            'x.doc.show_result' => 0,
         },
         {
             argv => [qw/file3 3.5K --pattern AABBCC/],
             summary => 'Create a file of size 3.5KB containing repeated pattern',
             test => 0,
+            'x.doc.show_result' => 0,
         },
         {
             argv => [qw/file4 4K --pattern A --pattern B --pattern C/],
             summary => 'Create a file of size 4KB containing random sequences of A, B, C',
             test => 0,
+            'x.doc.show_result' => 0,
         },
         #{
         #    argv => [qw[file4 4K --random-lines /usr/share/dict/words]],
         #    summary => 'Create a file of size ~4K containing random lines from /usr/share/dict/words',
         #    test => 0,
+        #    'x.doc.show_result' => 0,
         #},
     ],
 };
@@ -142,9 +147,9 @@ sub create_random_file {
     if (file_exists $fname) {
         if ($interactive) {
             return [200, "Cancelled"]
-                unless confirm "Confirm override existing file", {default=>0};
+                unless confirm "Confirm overwrite existing file", {default=>0};
         } else {
-            return [409, "File already exists"] unless $args{override};
+            return [409, "File already exists"] unless $args{overwrite};
         }
         unlink $fname or return [400, "Can't unlink $fname: $!"];
     } else {
