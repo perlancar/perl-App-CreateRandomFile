@@ -2,3 +2,4 @@ App-CreateRandomFile-*
 .build
 *~
 nytprof*
+.DS_Store
